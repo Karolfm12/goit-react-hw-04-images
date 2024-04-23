@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { INITIAL_VALUES } from './initial-values';
+import { INITIAL_VALUES } from '../constants/initial-values';
 
 export const App = () => {
   const [data, setData] = useState(INITIAL_VALUES);
