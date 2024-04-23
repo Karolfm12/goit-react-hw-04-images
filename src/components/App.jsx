@@ -26,11 +26,21 @@ export const App = () => {
       ...prev,
       q: e.target.value,
     }));
+    getData();
   };
+
   const handleOnSubmit = e => {
     e.preventDefault();
     getData();
   };
+
+  const loadMoreImages = () => {
+    setData(prev => ({
+      ...prev,
+      page: data.page + 1,
+    }));
+  };
+
   return (
     <>
       <header className="searchbar">
@@ -61,7 +71,9 @@ export const App = () => {
             );
           })}
       </ul>
-      <button className="loadMore">Load More images</button>
+      <button className="loadMore" onClick={loadMoreImages}>
+        Load More images
+      </button>
       <p>{data.q}</p>
     </>
   );
