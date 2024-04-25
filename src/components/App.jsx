@@ -1,8 +1,59 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import simpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import { INITIAL_VALUES } from '../constants/initial-values';
 
 export const App = () => {
   const [data, setData] = useState(INITIAL_VALUES);
+
+  useEffect(() => {
+    const lightbox = new simpleLightbox('.gallery a', {
+      captions: true,
+      captionSelector: 'img',
+      captionType: 'attr',
+      captionsData: 'alt',
+      captionDelay: 250,
+    });
+    return () => {
+      lightbox.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    const lightbox = new simpleLightbox('.gallery a', {
+      captions: true,
+      captionSelector: 'img',
+      captionType: 'attr',
+      captionsData: 'alt',
+      captionDelay: 250,
+    });
+    lightbox.refresh();
+  }, [data]);
+
+  const handleOnChange = e => {
+    setData(prev => ({
+      ...prev,
+      q: e.target.value,
+    }));
+  };
+
+  const handleOnSubmit = e => {
+    e.preventDefault();
+    setData(prev => ({
+      ...prev,
+      page: 1,
+    }));
+    getData();
+  };
+
+  const loadMoreImages = () => {
+    setData(prev => ({
+      ...prev,
+      page: prev.page + 1,
+      imageData: [...prev.imageData, ...data.hits],
+    }));
+    getData();
+  };
 
   const getData = async () => {
     const query = `https://pixabay.com/api/?key=${
@@ -16,29 +67,9 @@ export const App = () => {
     try {
       const response = await fetch(query);
       const images = await response.json();
+      console.log(images);
       setData(images);
     } catch (error) {}
-  };
-
-  const handleOnChange = e => {
-    // setData({ q: e.target.value });
-    setData(prev => ({
-      ...prev,
-      q: e.target.value,
-    }));
-    getData();
-  };
-
-  const handleOnSubmit = e => {
-    e.preventDefault();
-    getData();
-  };
-
-  const loadMoreImages = () => {
-    setData(prev => ({
-      ...prev,
-      page: data.page + 1,
-    }));
   };
 
   return (
@@ -74,7 +105,6 @@ export const App = () => {
       <button className="loadMore" onClick={loadMoreImages}>
         Load More images
       </button>
-      <p>{data.q}</p>
     </>
   );
 };
