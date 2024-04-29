@@ -1,10 +1,15 @@
+import Notiflix from 'notiflix';
 import { useEffect, useState } from 'react';
 import simpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import { INITIAL_VALUES } from '../constants/initial-values';
 
 export const App = () => {
-  const [data, setData] = useState(INITIAL_VALUES);
+  const API = '18941965-072e6ae370689f800c64fac36';
+  const orientation = 'horizontal';
+  const per_page = 10;
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [imageData, setImageData] = useState([]);
 
   useEffect(() => {
     const lightbox = new simpleLightbox('.gallery a', {
@@ -28,48 +33,48 @@ export const App = () => {
       captionDelay: 250,
     });
     lightbox.refresh();
-  }, [data]);
+  }, [imageData]);
 
   const handleOnChange = e => {
-    setData(prev => ({
-      ...prev,
-      q: e.target.value,
-    }));
+    setQuery(e.target.value);
+    setPage(1);
+  };
+
+  const fetchImages = () => {
+    const URL = `https://pixabay.com/api/?key=${API}&q=${encodeURIComponent(
+      query
+    )}&page=${page}&per_page=${per_page}&orientation=${orientation}`;
+
+    fetch(URL)
+      .then(response => response.json())
+      .then(data => {
+        if (data.hits.length === 0) {
+          Notiflix.Notify.failure('No images matching your search query');
+        }
+        setImageData(prevImageData => [...prevImageData, ...data.hits]);
+        setPage(prevPage => prevPage + 1);
+      })
+      .catch(error => {
+        console.error('Error fetching images:', error);
+      });
   };
 
   const handleOnSubmit = e => {
     e.preventDefault();
-    setData(prev => ({
-      ...prev,
-      page: 1,
-    }));
-    getData();
+
+    setPage(1);
+    setImageData([]);
+    if (!query) {
+      Notiflix.Notify.failure('Please enter a search query.');
+      return;
+    }
+    fetchImages();
+    e.target.reset();
   };
 
-  const loadMoreImages = () => {
-    setData(prev => ({
-      ...prev,
-      page: prev.page + 1,
-      imageData: [...prev.imageData, ...data.hits],
-    }));
-    getData();
-  };
-
-  const getData = async () => {
-    const query = `https://pixabay.com/api/?key=${
-      data.key
-    }&q=${encodeURIComponent(data.q)}&image_type=${
-      data.image_type
-    }&orientation=${data.orientation}&safesearch=${data.safesearch}&per_page=${
-      data.per_page
-    }&page=${data.page}`;
-
-    try {
-      const response = await fetch(query);
-      const images = await response.json();
-      console.log(images);
-      setData(images);
-    } catch (error) {}
+  const loadMoreImages = e => {
+    e.preventDefault();
+    fetchImages();
   };
 
   return (
@@ -91,8 +96,8 @@ export const App = () => {
         </form>
       </header>
       <ul className="gallery">
-        {data.hits &&
-          data.hits.map((value, index) => {
+        {imageData &&
+          imageData.map((value, index) => {
             return (
               <li key={index} className="gallery-item">
                 <a href={value.largeImageURL}>
